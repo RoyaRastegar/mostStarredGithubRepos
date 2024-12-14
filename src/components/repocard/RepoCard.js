@@ -1,8 +1,8 @@
 import { IoStar } from 'react-icons/io5';
-const RepoCard = ({ repo, key }) => {
+const RepoCard = ({ repo }) => {
   return (
     <div
-      key={key}
+      key={repo.id}
       className='bg-white rounded-lg shadow-lg px-5 py-5 border-b-2 w-full  mx-auto '
     >
       <div className='mb-4'>

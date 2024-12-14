@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import RepoCard from '../repocard/RepoCard';
 import Header from '../header/Header';
 import Footer from '../footer/Footer';
@@ -11,34 +11,37 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [errorMassage, setErrorMassage] = useState('');
   const reposPerPage = 30;
   //#endregion
   // #regionhook
   const onPageChange = (page) => setCurrentPage(page);
-  const fetchData = useCallback(
-    async (page) => {
-      if (!date.tenDaysAgo) return;
 
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!date.tenDaysAgo) return;
       setLoading(true);
       try {
         const response = await fetch(
-          `https://api.github.com/search/repositories?q=created:>${date.tenDaysAgo}&sort=stars&order=desc&page=${page}&per_page=${reposPerPage}`
+          `https://api.github.com/search/repositories?q=created:>${date.tenDaysAgo}&sort=stars&order=desc&page=${currentPage}&per_page=${reposPerPage}`
         );
         const data = await response.json();
-        setRepos(data.items || []);
-        setTotalPages(Math.ceil(data.total_count / reposPerPage));
+        console.log(data, 'data');
+        if (data.status !== '422') {
+          setRepos(data.items);
+          setTotalPages(Math.ceil(data.total_count / reposPerPage));
+        } else {
+          setErrorMassage(data.message);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
-    },
-    [date.tenDaysAgo]
-  );
+    };
 
-  useEffect(() => {
-    fetchData(currentPage);
-  }, [fetchData, currentPage]);
+    fetchData();
+  }, [currentPage, date.tenDaysAgo]);
 
   useEffect(() => {
     const getDate = () => {
@@ -52,7 +55,7 @@ const Home = () => {
       };
     };
     setDate(getDate());
-  }, []);
+  }, [currentPage]);
   // #endregionhook
   return (
     <div className='h-screen flex flex-col lg:w-1/2 m-auto lg:border'>
@@ -66,21 +69,27 @@ const Home = () => {
             />
           </div>
         ) : (
-          <>
-            <div>
-              {repos.map((repo) => (
-                <RepoCard repo={repo} />
-              ))}
-            </div>
-            <div className='flex overflow-x-auto sm:justify-center'>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={onPageChange}
-                showIcons
-              />
-            </div>
-          </>
+          <div className='text-center content-center text-xl'>
+            {repos && repos.length > 0 ? (
+              <div>
+                <div>
+                  {repos.map((repo) => (
+                    <RepoCard repo={repo} key={repo.id} />
+                  ))}
+                </div>
+                <div className='flex overflow-x-auto sm:justify-center'>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={onPageChange}
+                    showIcons
+                  />
+                </div>
+              </div>
+            ) : (
+              <div>{errorMassage}</div>
+            )}
+          </div>
         )}
       </div>
       <Footer />

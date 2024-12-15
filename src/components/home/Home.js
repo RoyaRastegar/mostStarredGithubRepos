@@ -26,8 +26,7 @@ const Home = () => {
           `https://api.github.com/search/repositories?q=created:>${date.tenDaysAgo}&sort=stars&order=desc&page=${currentPage}&per_page=${reposPerPage}`
         );
         const data = await response.json();
-        console.log(data, 'data');
-        if (data.status !== '422') {
+        if (!data.status) {
           setRepos(data.items);
           setTotalPages(Math.ceil(data.total_count / reposPerPage));
         } else {
